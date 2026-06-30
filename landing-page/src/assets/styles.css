@@ -1364,6 +1364,136 @@ section { padding: 72px 0; }
 .download__footnote a { color: var(--accent-text); }
 .download__footnote a:hover { text-decoration: underline; }
 
+/* Download warning modal */
+.dl-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  animation: dl-modal-fade 0.2s ease;
+}
+@keyframes dl-modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.dl-modal__dialog {
+  position: relative;
+  width: min(100%, 520px);
+  max-height: min(90vh, 720px);
+  overflow-y: auto;
+  padding: 28px 28px 24px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  animation: dl-modal-slide 0.25s ease;
+}
+@keyframes dl-modal-slide {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.dl-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.dl-modal__close:hover {
+  background: var(--bg-inset);
+  color: var(--text);
+}
+.dl-modal__close svg { width: 18px; height: 18px; }
+.dl-modal__badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 4px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--amber);
+  background: var(--amber-subtle);
+  border-radius: 999px;
+}
+.dl-modal__title {
+  margin: 0 32px 16px 0;
+  font-size: 1.375rem;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+}
+.dl-modal__body {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+.dl-modal__body p { margin: 0 0 14px; }
+.dl-modal__body p:last-child { margin-bottom: 0; }
+.dl-modal__body strong { color: var(--text); font-weight: 600; }
+.dl-modal__steps {
+  margin: 18px 0;
+  padding: 16px 18px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.dl-modal__steps-title {
+  margin: 0 0 10px !important;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.dl-modal__steps ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+}
+.dl-modal__steps li { margin-bottom: 8px; }
+.dl-modal__steps li:last-child { margin-bottom: 0; }
+.dl-modal__fineprint {
+  font-size: 0.8125rem !important;
+  color: var(--text-tertiary) !important;
+  font-style: italic;
+}
+.dl-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+.dl-modal__actions .btn {
+  flex: 1 1 auto;
+  min-width: 140px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.dl-modal__actions .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.dl-modal__file {
+  margin: 14px 0 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
 /* ============================================================
    Footer
    ============================================================ */
