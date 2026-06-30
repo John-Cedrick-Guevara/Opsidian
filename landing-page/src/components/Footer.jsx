@@ -1,5 +1,5 @@
 import React from 'react'
-import iconUrl from '../icon.png'
+import iconUrl from '../assets/icon.png'
 
 const Footer = () => (
   <footer className="footer">

@@ -9,25 +9,28 @@ const Download = () => {
       icon: <Icons.Apple />,
       name: 'macOS',
       meta: 'Universal · 124 MB',
-      body: 'Apple Silicon and Intel. DMG install, or brew install opsidian. Minimum macOS 11.',
+      body: 'Apple Silicon and Intel. DMG install. Minimum macOS 11.',
       action: 'Download .dmg',
-      available: true,
+      available: false,
+      filename: 'Opsidian-0.1.0-mac.dmg',
     },
     {
       icon: <Icons.Windows />,
       name: 'Windows',
-      meta: 'x64 · 138 MB',
-      body: 'Windows 10 and 11. MSI installer with auto-update. ARM build available on request.',
-      action: 'Download .msi',
+      meta: 'x64 installer',
+      body: 'Windows 10 and 11. Run the installer — no account required.',
+      action: 'Download .exe',
       available: true,
+      filename: 'Opsidian-0.1.0-win.exe',
     },
     {
       icon: <Icons.Linux />,
       name: 'Linux',
-      meta: 'AppImage · 142 MB',
-      body: 'AppImage, .deb, and .rpm. Flatpak coming in v0.5. Works on Wayland and X11.',
+      meta: 'AppImage',
+      body: 'AppImage for most distros. Works on Wayland and X11.',
       action: 'Download',
-      available: true,
+      available: false,
+      filename: 'Opsidian-0.1.0-linux.AppImage',
     },
     {
       icon: <Icons.Apple />,
@@ -81,7 +84,8 @@ const Download = () => {
               {p.available ? (
                 <a
                   className="dl-card__action"
-                  href={p.github ? 'https://github.com' : '#'}
+                  href={p.github ? 'https://github.com' : `/releases/${p.filename}`}
+                  download={p.filename}
                   target={p.github ? '_blank' : undefined}
                   rel={p.github ? 'noopener noreferrer' : undefined}
                 >

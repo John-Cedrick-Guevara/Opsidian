@@ -1,7 +1,7 @@
 import React from 'react'
 import { Icons } from './Icons'
 import ThemeToggle from './ThemeToggle'
-import iconUrl from '../icon.png'
+import iconUrl from '../assets/icon.png'
 
 const Nav = () => (
   <header className="nav">

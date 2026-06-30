@@ -1,31 +1,36 @@
 # Releases Folder
 
-Place your built Electron app installers here:
+Place built installers here so the landing page download buttons work.
 
-## Expected Files
+## Windows (build on your PC)
 
-- `Opsidian-0.1.0-mac.dmg` - macOS installer
-- `Opsidian-0.1.0-win.exe` - Windows installer  
-- `Opsidian-0.1.0-linux.AppImage` - Linux AppImage
-
-## Building Releases
-
-From the main Opsidian project directory:
+From the **project root** (`Opsidian/`, not `landing-page/`):
 
 ```bash
-# Build for all platforms
-npm run build
-
-# The built files will be in the 'out' folder
-# Copy them to this releases folder with appropriate names
+npm install
+npm run dist:win
 ```
 
-## Alternative: Use GitHub Releases
+Output: `release/Opsidian-0.1.0-win.exe`
 
-Instead of hosting files here, you can update the download URLs in `src/components/Download.jsx` to point directly to GitHub releases:
+Copy to this folder:
 
-```javascript
-const downloadUrl = `https://github.com/yourusername/opsidian/releases/download/v0.1.0/${filename}`
+```bash
+copy "..\..\release\Opsidian-0.1.0-win.exe" "Opsidian-0.1.0-win.exe"
 ```
 
-This way, your landing page will always link to the latest releases on GitHub.
+(PowerShell from this directory: `Copy-Item "..\..\release\Opsidian-0.1.0-win.exe" .`)
+
+## Expected filenames
+
+| Platform | File |
+|----------|------|
+| Windows | `Opsidian-0.1.0-win.exe` |
+| macOS | `Opsidian-0.1.0-mac.dmg` |
+| Linux | `Opsidian-0.1.0-linux.AppImage` |
+
+## GitHub Releases (optional)
+
+For large files, use GitHub Releases and point `Download.jsx` URLs to:
+
+`https://github.com/yourusername/opsidian/releases/download/v0.1.0/Opsidian-0.1.0-win.exe`
