@@ -4,7 +4,7 @@ import ThemeToggle from './ThemeToggle'
 import iconUrl from '../assets/icon.png'
 
 const Nav = () => (
-  <header className="nav">
+  <header className="nav w-[100%]">
     <div className="container nav__inner">
       <a href="#top" className="nav__logo" aria-label="Opsidian home">
         <span className="nav__logo-mark">
