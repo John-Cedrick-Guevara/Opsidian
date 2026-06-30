@@ -1,0 +1,2654 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nerve — A local-first workspace for notes, tasks, and a graph that's actually yours</title>
+<meta name="description" content="Nerve combines a distraction-free rich editor, bi-directional linking, a recurring-task kanban, and a calendar — with all data stored locally on your device. No account. No cloud lock-in.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Theme tokens — single source of truth for color & radius
+   ============================================================ */
+:root {
+  --bg: #ffffff;
+  --bg-subtle: #fafafa;
+  --bg-elevated: #ffffff;
+  --bg-inset: #f4f4f5;
+  --text: #18181b;
+  --text-secondary: #52525b;
+  --text-tertiary: #71717a;
+  --border: #e7e7eb;
+  --border-strong: #d4d4d8;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-subtle: #eef2ff;
+  --accent-text: #4f46e5;
+  --green: #16a34a;
+  --green-subtle: #dcfce7;
+  --amber: #d97706;
+  --amber-subtle: #fef3c7;
+  --rose: #e11d48;
+  --rose-subtle: #ffe4e6;
+  --blue: #2563eb;
+  --blue-subtle: #dbeafe;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-lg: 0 24px 64px -16px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.04);
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0b;
+  --bg-subtle: #111113;
+  --bg-elevated: #18181b;
+  --bg-inset: #1f1f23;
+  --text: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --accent-subtle: rgba(99, 102, 241, 0.14);
+  --accent-text: #a5b4fc;
+  --green: #22c55e;
+  --green-subtle: rgba(34, 197, 94, 0.16);
+  --amber: #f59e0b;
+  --amber-subtle: rgba(245, 158, 11, 0.16);
+  --rose: #f43f5e;
+  --rose-subtle: rgba(244, 63, 94, 0.16);
+  --blue: #3b82f6;
+  --blue-subtle: rgba(59, 130, 246, 0.16);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 24px 64px -16px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.3);
+}
+
+/* ============================================================
+   Reset & base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.025em; color: var(--text); }
+h1 { font-size: clamp(2.25rem, 5.5vw, 4rem); line-height: 1.05; letter-spacing: -0.04em; font-weight: 700; }
+h2 { font-size: clamp(1.875rem, 3.5vw, 2.75rem); line-height: 1.1; letter-spacing: -0.03em; }
+h3 { font-size: 1.375rem; line-height: 1.3; letter-spacing: -0.02em; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }
+img, svg { display: block; max-width: 100%; }
+
+::selection { background: var(--accent-subtle); color: var(--text); }
+
+/* ============================================================
+   Layout primitives
+   ============================================================ */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+@media (min-width: 768px) {
+  .container { padding: 0 40px; }
+}
+section { padding: 72px 0; }
+@media (min-width: 768px) { section { padding: 120px 0; } }
+
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: 16px;
+}
+.section-eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: var(--accent-text);
+  opacity: 0.6;
+}
+.section-title {
+  max-width: 28ch;
+}
+.section-lead {
+  margin-top: 16px;
+  max-width: 60ch;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+@media (min-width: 768px) { .section-lead { font-size: 1.125rem; } }
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+  font-family: inherit;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.btn--primary {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.btn--primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+.btn--secondary {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.btn--secondary:hover {
+  border-color: var(--text-secondary);
+  background: var(--bg-subtle);
+}
+.btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.btn--ghost:hover {
+  color: var(--text);
+  background: var(--bg-subtle);
+}
+.btn--lg { padding: 13px 22px; font-size: 0.9375rem; }
+.btn--block { width: 100%; }
+.btn:disabled, .btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Nav
+   ============================================================ */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s, border-color 0.3s;
+}
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.nav__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1.0625rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.nav__logo-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+}
+.nav__links {
+  display: none;
+  align-items: center;
+  gap: 28px;
+}
+@media (min-width: 768px) { .nav__links { display: flex; } }
+.nav__link {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: color 0.15s;
+}
+.nav__link:hover { color: var(--text); }
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav__cta { display: none; }
+@media (min-width: 640px) { .nav__cta { display: inline-flex; } }
+
+/* ============================================================
+   Theme toggle
+   ============================================================ */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.theme-toggle:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: var(--bg-subtle);
+}
+.theme-toggle svg { width: 16px; height: 16px; }
+.theme-toggle__sun { display: none; }
+.theme-toggle__moon { display: block; }
+[data-theme="dark"] .theme-toggle__sun { display: block; }
+[data-theme="dark"] .theme-toggle__moon { display: none; }
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero {
+  padding: 112px 0 64px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+@media (min-width: 768px) { .hero { padding: 152px 0 96px; } }
+
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero__bg::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1200px;
+  height: 600px;
+  background: radial-gradient(ellipse at center, var(--accent-subtle) 0%, transparent 60%);
+  opacity: 0.7;
+}
+.hero__inner { position: relative; z-index: 1; }
+
+.hero__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-sm);
+}
+.hero__pill-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px var(--green-subtle);
+}
+.hero__pill-version {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+  margin-left: 4px;
+}
+
+.hero__headline {
+  max-width: 18ch;
+  margin: 0 auto;
+}
+.hero__headline em {
+  font-style: normal;
+  color: var(--accent-text);
+  font-weight: 700;
+}
+.hero__sub {
+  max-width: 56ch;
+  margin: 24px auto 0;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+@media (min-width: 768px) { .hero__sub { font-size: 1.25rem; } }
+
+.hero__ctas {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+.hero__platforms {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
+.hero__platforms span { color: var(--text-tertiary); }
+.hero__platforms svg { width: 14px; height: 14px; opacity: 0.7; }
+
+.hero__visual {
+  margin-top: 72px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ============================================================
+   App window (used for hero + feature mocks)
+   ============================================================ */
+.app-window {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.app-window__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+.app-window__dots {
+  display: flex;
+  gap: 6px;
+}
+.app-window__dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+[data-theme="dark"] .app-window__dot { border-color: rgba(255,255,255,0.04); }
+.app-window__dot--red { background: #ff5f57; }
+.app-window__dot--yellow { background: #febc2e; }
+.app-window__dot--green { background: #28c840; }
+.app-window__title {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  flex: 1;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* Hero composite visual */
+.hero-composite {
+  display: flex;
+  height: 480px;
+}
+@media (min-width: 768px) { .hero-composite { height: 540px; } }
+
+.hero-composite__sidebar {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  gap: 8px;
+  width: 56px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+@media (min-width: 768px) { .hero-composite__sidebar { display: flex; } }
+.hero-composite__sidebar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+}
+.hero-composite__sidebar-icon--active {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+}
+.hero-composite__sidebar-icon svg { width: 16px; height: 16px; }
+
+.hero-composite__notelist {
+  display: none;
+  flex-direction: column;
+  width: 200px;
+  border-right: 1px solid var(--border);
+  padding: 8px;
+  background: var(--bg);
+}
+@media (min-width: 768px) { .hero-composite__notelist { display: flex; } }
+.notelist__header {
+  padding: 8px 8px 12px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.notelist__item {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.notelist__item:hover { background: var(--bg-subtle); }
+.notelist__item--active {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  font-weight: 500;
+}
+.notelist__item-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  flex-shrink: 0;
+}
+.notelist__item--active .notelist__item-dot { background: var(--accent-text); }
+
+.hero-composite__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.hero-composite__editor {
+  flex: 1.1;
+  padding: 24px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+.hero-composite__graph {
+  flex: 1;
+  position: relative;
+  background: var(--bg-subtle);
+  overflow: hidden;
+}
+
+/* On mobile, stack editor + graph */
+@media (max-width: 767px) {
+  .hero-composite { flex-direction: column; height: auto; }
+  .hero-composite__editor { padding: 16px; border-bottom: 1px solid var(--border); }
+  .hero-composite__graph { height: 240px; flex: none; }
+}
+
+/* ============================================================
+   Editor mock
+   ============================================================ */
+.editor-mock__title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+.editor-mock__heading {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+.editor-mock__p {
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.editor-mock__ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+.editor-mock__li {
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  padding-left: 16px;
+  position: relative;
+  margin-bottom: 4px;
+}
+.editor-mock__li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+}
+.editor-mock__strong { font-weight: 600; color: var(--text); }
+.editor-mock__em { font-style: italic; }
+.editor-mock__color { color: var(--accent-text); font-weight: 500; }
+.editor-mock__color--rose { color: var(--rose); }
+.editor-mock__color--green { color: var(--green); }
+
+.wikilink {
+  display: inline;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.wikilink:hover { background: var(--accent); color: white; }
+.wikilink::before { content: '[['; opacity: 0.5; }
+.wikilink::after { content: ']]'; opacity: 0.5; }
+
+/* ============================================================
+   Graph mock
+   ============================================================ */
+.graph-mock {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.graph-mock svg { width: 100%; height: 100%; }
+.graph-node {
+  fill: var(--bg-elevated);
+  stroke: var(--text-tertiary);
+  stroke-width: 1.5;
+  transition: fill 0.2s, stroke 0.2s;
+}
+.graph-node--accent {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+.graph-node--muted {
+  fill: var(--bg-elevated);
+  stroke: var(--border-strong);
+}
+.graph-edge {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  fill: none;
+}
+.graph-edge--active {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  opacity: 0.6;
+}
+.graph-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  fill: var(--text-tertiary);
+  pointer-events: none;
+}
+.graph-label--accent { fill: var(--accent-text); font-weight: 600; }
+
+@keyframes float-a {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(2px, -2px); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-2px, 2px); }
+}
+@keyframes float-c {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-3px, -1px); }
+}
+@keyframes pulse-ring {
+  0% { r: var(--r); opacity: 0.4; }
+  100% { r: calc(var(--r) * 2.2); opacity: 0; }
+}
+.graph-node-group { animation-duration: 6s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+.graph-node-group--a { animation-name: float-a; }
+.graph-node-group--b { animation-name: float-b; animation-duration: 7s; }
+.graph-node-group--c { animation-name: float-c; animation-duration: 8s; }
+.graph-pulse-ring { animation: pulse-ring 2.4s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .graph-node-group, .graph-pulse-ring { animation: none !important; }
+}
+
+/* ============================================================
+   Problem framing strip
+   ============================================================ */
+.problem {
+  padding: 56px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+.problem__inner {
+  max-width: 880px;
+  margin: 0 auto;
+  text-align: center;
+}
+.problem__text {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+@media (min-width: 768px) { .problem__text { font-size: 1.25rem; } }
+.problem__text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.problem__text .strike {
+  text-decoration: line-through;
+  text-decoration-color: var(--rose);
+  text-decoration-thickness: 2px;
+  color: var(--text-tertiary);
+}
+
+/* ============================================================
+   Feature blocks
+   ============================================================ */
+.features { padding: 96px 0; }
+@media (min-width: 768px) { .features { padding: 140px 0; } }
+
+.features__header {
+  max-width: 720px;
+  margin-bottom: 80px;
+}
+@media (min-width: 768px) { .features__header { margin-bottom: 112px; } }
+
+.feature {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: center;
+  margin-bottom: 96px;
+}
+@media (min-width: 1024px) {
+  .feature {
+    grid-template-columns: 1fr 1.1fr;
+    gap: 80px;
+    margin-bottom: 140px;
+  }
+  .feature:last-child { margin-bottom: 0; }
+  .feature--reverse .feature__media { order: -1; }
+}
+.feature__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin-bottom: 16px;
+}
+.feature__tag::before {
+  content: '';
+  width: 16px;
+  height: 1px;
+  background: var(--accent-text);
+  opacity: 0.5;
+}
+.feature__title {
+  font-size: 1.875rem;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  margin-bottom: 16px;
+}
+@media (min-width: 768px) { .feature__title { font-size: 2.25rem; } }
+.feature__body {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+.feature__bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.feature__bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+.feature__bullet svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+  margin-top: 3px;
+}
+.feature__media {
+  position: relative;
+}
+
+/* ============================================================
+   Backlinks mock
+   ============================================================ */
+.backlinks-mock {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.backlinks-mock__editor {
+  padding: 24px;
+  border-right: 1px solid var(--border);
+}
+.backlinks-mock__panel {
+  padding: 20px;
+  background: var(--bg-subtle);
+  display: flex;
+  flex-direction: column;
+}
+.backlinks-mock__panel-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+    
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.backlinks-mock__panel-title svg { width: 12px; height: 12px; }
+.backlinks-mock__panel-count {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  background: var(--bg-inset);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+.backlink-item {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.backlink-item:hover { border-color: var(--border-strong); }
+.backlink-item__title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.backlink-item__ctx {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+.backlink-item__ctx em {
+  font-style: normal;
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+}
+
+@media (max-width: 640px) {
+  .backlinks-mock { grid-template-columns: 1fr; }
+  .backlinks-mock__editor { border-right: none; border-bottom: 1px solid var(--border); }
+}
+
+/* ============================================================
+   Kanban mock
+   ============================================================ */
+.kanban-mock {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.kanban-mock__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+.kanban-mock__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.kanban-mock__filter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--bg-inset);
+}
+.kanban-mock__cols {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--border);
+}
+@media (min-width: 640px) {
+  .kanban-mock__cols { grid-template-columns: repeat(4, 1fr); }
+}
+.kanban-col {
+  background: var(--bg-subtle);
+  padding: 12px;
+  min-height: 280px;
+}
+.kanban-col__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+}
+.kanban-col__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.kanban-col__dot--todo { background: var(--text-tertiary); }
+.kanban-col__dot--doing { background: var(--amber); }
+.kanban-col__dot--done { background: var(--green); }
+.kanban-col__dot--skipped { background: var(--rose); opacity: 0.6; }
+.kanban-col__count {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+}
+.kanban-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.kanban-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.kanban-card__title {
+  font-size: 0.8125rem;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.kanban-card--done .kanban-card__title {
+  color: var(--text-tertiary);
+  text-decoration: line-through;
+}
+.kanban-card--skipped .kanban-card__title {
+  color: var(--text-tertiary);
+}
+.kanban-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.kanban-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-inset);
+  color: var(--text-tertiary);
+}
+.kanban-tag--green { background: var(--green-subtle); color: var(--green); }
+.kanban-tag--blue { background: var(--blue-subtle); color: var(--blue); }
+.kanban-tag--amber { background: var(--amber-subtle); color: var(--amber); }
+.kanban-recurring {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.625rem;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.kanban-recurring svg { width: 10px; height: 10px; }
+
+/* ============================================================
+   Calendar mock
+   ============================================================ */
+.calendar-mock {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.calendar-mock__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+.calendar-mock__month {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.calendar-mock__nav {
+  display: flex;
+  gap: 4px;
+}
+.calendar-mock__nav-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.calendar-mock__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+.calendar-mock__weekday {
+  padding: 8px 4px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+.calendar-mock__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+}
+.calendar-day {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 6px;
+  min-height: 64px;
+  position: relative;
+}
+.calendar-day:nth-child(7n) { border-right: none; }
+.calendar-day--out { background: var(--bg-subtle); }
+.calendar-day__num {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.calendar-day--out .calendar-day__num { color: var(--text-tertiary); opacity: 0.4; }
+.calendar-day--today .calendar-day__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  margin-left: -3px;
+  margin-top: -3px;
+}
+.calendar-event {
+  font-size: 0.625rem;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.calendar-event::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.calendar-event--accent { background: var(--accent-subtle); color: var(--accent-text); }
+.calendar-event--green { background: var(--green-subtle); color: var(--green); }
+.calendar-event--amber { background: var(--amber-subtle); color: var(--amber); }
+.calendar-event--blue { background: var(--blue-subtle); color: var(--blue); }
+.calendar-event--rose { background: var(--rose-subtle); color: var(--rose); }
+
+/* ============================================================
+   Trust / local-first section
+   ============================================================ */
+.trust {
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.trust__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 48px;
+  align-items: center;
+  margin-top: 64px;
+}
+@media (min-width: 1024px) {
+  .trust__grid {
+    grid-template-columns: 1.05fr 1fr;
+    gap: 80px;
+  }
+}
+.trust__points {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+@media (min-width: 480px) { .trust__points { grid-template-columns: 1fr 1fr; } }
+.trust-point__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.trust-point__icon svg { width: 18px; height: 18px; }
+.trust-point__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+.trust-point__body {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.trust__visual {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+.trust__visual-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+.trust__visual-path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  flex: 1;
+}
+.trust__visual-path .tilde { color: var(--accent-text); }
+.trust__visual-body {
+  padding: 20px 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.85;
+  color: var(--text-secondary);
+  background: var(--bg);
+}
+.trust-file__name { color: var(--text); }
+.trust-file__indent { padding-left: 20px; }
+.trust-file__indent--2 { padding-left: 40px; }
+.trust-file__comment { color: var(--text-tertiary); }
+.trust-file__accent { color: var(--accent-text); }
+
+/* ============================================================
+   How it works
+   ============================================================ */
+.howitworks__steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-top: 64px;
+}
+@media (min-width: 768px) { .howitworks__steps { grid-template-columns: repeat(4, 1fr); gap: 24px; } }
+
+.step {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  position: relative;
+}
+.step__num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-text);
+  margin-bottom: 16px;
+}
+.step__icon {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+.step__title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: -0.015em;
+}
+.step__body {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.step__arrow {
+  display: none;
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--border-strong);
+  z-index: 1;
+}
+@media (min-width: 768px) {
+  .step:not(:last-child) .step__arrow { display: block; }
+}
+
+/* ============================================================
+   Download section
+   ============================================================ */
+.download {
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+}
+.download__header {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 64px;
+}
+.download__title { margin: 0 auto; max-width: 18ch; }
+.download__sub {
+  margin: 20px auto 0;
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  max-width: 52ch;
+}
+.download__cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+@media (min-width: 640px) { .download__cards { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) { .download__cards { grid-template-columns: repeat(3, 1fr); } }
+
+.dl-card {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  transition: border-color 0.2s, transform 0.2s;
+}
+.dl-card:hover { border-color: var(--border-strong); }
+.dl-card--soon {
+  opacity: 0.7;
+}
+.dl-card__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.dl-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: var(--bg-inset);
+  color: var(--text);
+}
+.dl-card__icon svg { width: 22px; height: 22px; }
+.dl-card__name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.dl-card__meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.dl-card__body {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  flex: 1;
+  line-height: 1.55;
+}
+.dl-card__action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.dl-card__action:hover {
+  background: var(--bg-subtle);
+  border-color: var(--text-secondary);
+}
+.dl-card__action svg { width: 14px; height: 14px; }
+.dl-card__action--soon {
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+}
+.dl-card__action--soon:hover { background: transparent; border-color: var(--border-strong); }
+
+.download__footnote {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+}
+.download__footnote a { color: var(--accent-text); }
+.download__footnote a:hover { text-decoration: underline; }
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 56px 0 40px;
+}
+.footer__top {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 40px;
+}
+@media (min-width: 768px) {
+  .footer__top { flex-direction: row; justify-content: space-between; align-items: flex-start; }
+}
+.footer__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 320px;
+}
+.footer__logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 1.0625rem;
+  color: var(--text);
+}
+.footer__logo-mark { color: var(--accent); display: flex; }
+.footer__tag {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.footer__links {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 48px;
+}
+@media (min-width: 768px) {
+  .footer__links { grid-template-columns: repeat(4, 1fr); }
+}
+.footer__col-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+}
+.footer__link {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.footer__link:hover { color: var(--text); }
+.footer__bottom {
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+}
+@media (min-width: 768px) {
+  .footer__bottom { flex-direction: row; justify-content: space-between; align-items: center; }
+}
+.footer__bottom-links {
+  display: flex;
+  gap: 20px;
+}
+.footer__bottom-link {
+  color: var(--text-tertiary);
+  transition: color 0.15s;
+}
+.footer__bottom-link:hover { color: var(--text); }
+
+/* ============================================================
+   Reveal animation
+   ============================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0, 0, 1), transform 0.7s cubic-bezier(0.2, 0, 0, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}
+
+/* ============================================================
+   Mobile nav (no off-canvas, just hide links)
+   ============================================================ */
+@media (max-width: 767px) {
+  .nav__links { display: none; }
+}
+
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, createContext, useContext } = React;
+
+/* ============================================================
+   Icons
+   ============================================================ */
+const Icons = {
+  Sun: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>
+  ),
+  Moon: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  ),
+  Check: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  ),
+  ArrowRight: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12"/>
+      <polyline points="12 5 19 12 12 19"/>
+    </svg>
+  ),
+  ArrowDown: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/>
+      <polyline points="19 12 12 19 5 12"/>
+    </svg>
+  ),
+  Download: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+  ),
+  Recurring: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="17 1 21 5 17 9"/>
+      <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+      <polyline points="7 23 3 19 7 15"/>
+      <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+    </svg>
+  ),
+  Link: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </svg>
+  ),
+  HardDrive: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="22" y1="12" x2="2" y2="12"/>
+      <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+      <line x1="6" y1="16" x2="6.01" y2="16"/>
+      <line x1="10" y1="16" x2="10.01" y2="16"/>
+    </svg>
+  ),
+  WifiOff: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="1" y1="1" x2="23" y2="23"/>
+      <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+      <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+      <path d="M10.71 5.05A16 16 0 0 1 22.58 9"/>
+      <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+      <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+      <line x1="12" y1="20" x2="12.01" y2="20"/>
+    </svg>
+  ),
+  UserX: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="8.5" cy="7" r="4"/>
+      <line x1="18" y1="8" x2="23" y2="13"/>
+      <line x1="23" y1="8" x2="18" y2="13"/>
+    </svg>
+  ),
+  Lock: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  ),
+  Capture: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9"/>
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+    </svg>
+  ),
+  Graph: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="6" cy="6" r="2.5"/>
+      <circle cx="18" cy="6" r="2.5"/>
+      <circle cx="12" cy="18" r="2.5"/>
+      <line x1="7.5" y1="7" x2="16.5" y2="7"/>
+      <line x1="7" y1="7.5" x2="11" y2="16"/>
+      <line x1="17" y1="7.5" x2="13" y2="16"/>
+    </svg>
+  ),
+  Kanban: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="6" height="18" rx="1"/>
+      <rect x="9" y="3" width="6" height="13" rx="1"/>
+      <rect x="15" y="3" width="6" height="9" rx="1"/>
+    </svg>
+  ),
+  Calendar: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  ),
+  Note: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="8" y1="13" x2="16" y2="13"/>
+      <line x1="8" y1="17" x2="13" y2="17"/>
+    </svg>
+  ),
+  Search: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
+  Settings: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  ),
+  Apple: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.05 12.04c-.02-2.6 2.13-3.85 2.22-3.91-1.21-1.77-3.1-2.01-3.77-2.04-1.6-.16-3.13.94-3.94.94-.82 0-2.06-.92-3.39-.89-1.74.03-3.35 1.01-4.25 2.57-1.81 3.14-.46 7.78 1.3 10.33.86 1.25 1.88 2.65 3.22 2.6 1.29-.05 1.78-.83 3.34-.83 1.55 0 2 .83 3.37.81 1.39-.03 2.27-1.27 3.12-2.53.98-1.45 1.39-2.85 1.41-2.92-.03-.01-2.7-1.04-2.72-4.13zM14.63 4.59c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-2.99 1.54-.66.76-1.23 1.98-1.08 3.15 1.14.09 2.3-.58 3.01-1.44z"/>
+    </svg>
+  ),
+  Windows: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
+    </svg>
+  ),
+  Linux: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.097.267.145.4l.003.003c.491.946 1.388 1.379 2.357 1.304.971-.07 1.999-.639 2.838-1.602.834-.965 2.005-1.367 2.802-1.904.399-.267.717-.601.743-1.099.025-.466-.234-.997-.835-1.697v-.097l-.003-.003c-.267-.335-.398-.535-.55-.735-.15-.2-.318-.399-.586-.668v-.135c-.683-.669-.664-1.155-.629-1.602.038-.466.182-.901.169-1.368-.014-.466-.157-.866-.317-1.268-.082-.198-.165-.396-.225-.602-.058-.198-.097-.399-.058-.599.075-.401.197-.729.241-1.069.044-.334.014-.668-.07-.999-.157-.66-.397-1.269-.459-1.854-.063-.583-.014-1.116-.014-1.652 0-.535-.014-1.067.014-1.602.027-.535.099-1.067.299-1.602.197-.535.531-1.066.666-1.601.135-.535.063-1.066-.082-1.601-.135-.535-.349-1.067-.664-1.602-.299-.535-.685-1.066-1.151-1.602-.466-.535-1.018-1.066-1.516-1.602-.498-.535-.943-1.067-1.243-1.602-.299-.535-.455-1.066-.399-1.601.058-.535.317-1.067.664-1.602.349-.535.803-1.066 1.151-1.602.349-.535.598-1.066.598-1.601 0-.067-.005-.135-.014-.2-.063-.466-.299-.934-.664-1.401-.366-.466-.864-.934-1.461-1.401-.598-.466-1.295-.934-2.099-1.401-.803-.466-1.716-.934-2.734-1.401-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399-.299-.135-.598-.267-.897-.399z"/>
+    </svg>
+  ),
+  Android: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4483.9993.9994 0 .551-.4482.9996-.9993.9996m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4483.9993.9994 0 .551-.4482.9996-.9993.9996m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.2439 13.8533 7.8508 12 7.8508s-3.5902.3931-5.1322 1.0989L4.8453 5.4467a.4161.4161 0 00-.5677-.1521.4157.4157 0 00-.1521.5676l1.9973 3.4592C2.6889 11.1867.3432 14.6589 0 18.761h24c-.3432-4.1021-2.6889-7.5743-6.1185-9.4396"/>
+    </svg>
+  ),
+  GitHub: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
+  ),
+  ChevronRight: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  ),
+};
+
+/* ============================================================
+   Hooks
+   ============================================================ */
+const useTheme = () => {
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nerve-theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch (e) {}
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem('nerve-theme', theme); } catch (e) {}
+  }, [theme]);
+
+  const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+  return { theme, toggle };
+};
+
+const useReveal = (options = {}) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') { setVisible(true); return; }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px', ...options });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return [ref, visible];
+};
+
+/* ============================================================
+   Theme Toggle
+   ============================================================ */
+const ThemeToggle = () => {
+  const { theme, toggle } = useTheme();
+  return (
+    <button
+      className="theme-toggle"
+      onClick={toggle}
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+    >
+      <span className="theme-toggle__sun"><Icons.Sun /></span>
+      <span className="theme-toggle__moon"><Icons.Moon /></span>
+    </button>
+  );
+};
+
+/* ============================================================
+   Logo mark
+   ============================================================ */
+const LogoMark = ({ size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <line x1="8" y1="9" x2="23" y2="9" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" opacity="0.5"/>
+    <line x1="8" y1="9" x2="16" y2="23" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" opacity="0.5"/>
+    <line x1="23" y1="9" x2="16" y2="23" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" opacity="0.5"/>
+    <circle cx="8" cy="9" r="4" fill="currentColor"/>
+    <circle cx="23" cy="9" r="3" fill="currentColor" opacity="0.45"/>
+    <circle cx="16" cy="23" r="3.5" fill="currentColor" opacity="0.7"/>
+  </svg>
+);
+
+/* ============================================================
+   Nav
+   ============================================================ */
+const Nav = () => (
+  <header className="nav">
+    <div className="container nav__inner">
+      <a href="#top" className="nav__logo" aria-label="Nerve home">
+        <span className="nav__logo-mark"><LogoMark size={26} /></span>
+        <span>Nerve</span>
+      </a>
+      <nav className="nav__links" aria-label="Primary">
+        <a className="nav__link" href="#features">Features</a>
+        <a className="nav__link" href="#local-first">Local-first</a>
+        <a className="nav__link" href="#how-it-works">How it works</a>
+        <a className="nav__link" href="#download">Download</a>
+      </nav>
+      <div className="nav__actions">
+        <ThemeToggle />
+        <a className="btn btn--primary nav__cta" href="#download">
+          <Icons.Download />
+          <span>Download — free</span>
+        </a>
+      </div>
+    </div>
+  </header>
+);
+
+/* ============================================================
+   Editor content (reused in hero + feature mock)
+   ============================================================ */
+const EditorContent = () => (
+  <div className="editor-mock__content">
+    <div className="editor-mock__title">Q3 Planning</div>
+    <div className="editor-mock__heading">Priorities</div>
+    <ul className="editor-mock__ul">
+      <li className="editor-mock__li">Ship <span className="editor-mock__strong">v0.5</span> — graph perf, mobile beta</li>
+      <li className="editor-mock__li">Hire one engineer focused on <span className="editor-mock__color">sync</span></li>
+      <li className="editor-mock__li">Write three essays on local-first architecture</li>
+    </ul>
+    <div className="editor-mock__heading">Notes</div>
+    <p className="editor-mock__p">
+      The <span className="wikilink">graph view</span> needs to handle 10k nodes without choking. Currently at 2.3k on my workspace and frame rate is fine, but the <span className="wikilink">rendering pipeline</span> is doing too much per frame.
+    </p>
+    <p className="editor-mock__p">
+      Talked to <span className="wikilink">Maya Chen</span> about the <span className="wikilink">sync protocol</span> — she suggested looking at <span className="editor-mock__color editor-mock__color--green">Automerge</span> vs <span className="editor-mock__em">Yjs</span> again.
+    </p>
+  </div>
+);
+
+/* ============================================================
+   Graph mock (SVG with subtle animation)
+   ============================================================ */
+const GraphMock = ({ variant = 'full' }) => {
+  // Node positions in viewBox 0 0 400 300
+  const nodes = [
+    { id: 'a', x: 80,  y: 80,  r: 8,  label: 'Q3 Planning', accent: true,  anim: 'a' },
+    { id: 'b', x: 180, y: 60,  r: 6,  label: 'Sync arch',    accent: false, anim: 'b' },
+    { id: 'c', x: 280, y: 90,  r: 7,  label: 'Graph view',   accent: false, anim: 'c' },
+    { id: 'd', x: 130, y: 160, r: 5,  label: 'Maya Chen',    accent: false, anim: 'a' },
+    { id: 'e', x: 230, y: 180, r: 6,  label: 'Weekly rev',   accent: false, anim: 'b' },
+    { id: 'f', x: 330, y: 200, r: 5,  label: 'v0.5',         accent: false, anim: 'c' },
+    { id: 'g', x: 60,  y: 220, r: 4,  label: '',             accent: false, anim: 'a' },
+    { id: 'h', x: 320, y: 40,  r: 4,  label: '',             accent: false, anim: 'b' },
+    { id: 'i', x: 180, y: 250, r: 5,  label: 'Automerge',    accent: false, anim: 'c' },
+    { id: 'j', x: 280, y: 260, r: 4,  label: '',             accent: false, anim: 'a' },
+  ];
+  const edges = [
+    ['a','b'], ['a','c'], ['a','d'], ['b','c'], ['b','e'],
+    ['c','f'], ['d','e'], ['e','f'], ['e','i'], ['c','h'],
+    ['a','g'], ['e','j'], ['b','i'],
+  ];
+  const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+  return (
+    <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <defs>
+        <radialGradient id="pulse-grad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.3"/>
+          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0"/>
+        </radialGradient>
+      </defs>
+      {/* Edges */}
+      {edges.map(([from, to], i) => {
+        const f = nodeMap[from], t = nodeMap[to];
+        const isActive = from === 'a' || to === 'a';
+        return (
+          <line
+            key={`e-${i}`}
+            x1={f.x} y1={f.y} x2={t.x} y2={t.y}
+            className={`graph-edge${isActive ? ' graph-edge--active' : ''}`}
+          />
+        );
+      })}
+      {/* Pulse ring around accent node */}
+      <circle
+        cx={nodeMap.a.x} cy={nodeMap.a.y} r={12}
+        fill="url(#pulse-grad)"
+        className="graph-pulse-ring"
+        style={{ '--r': '12px' }}
+      />
+      {/* Nodes */}
+      {nodes.map(n => (
+        <g key={n.id} className={`graph-node-group graph-node-group--${n.anim}`} style={{ animationDelay: `${(parseInt(n.id, 36) % 5) * 0.4}s` }}>
+          <circle
+            cx={n.x} cy={n.y} r={n.r}
+            className={`graph-node${n.accent ? ' graph-node--accent' : ' graph-node--muted'}`}
+          />
+          {n.label && (
+            <text
+              x={n.x} y={n.y - n.r - 6}
+              textAnchor="middle"
+              className={`graph-label${n.accent ? ' graph-label--accent' : ''}`}
+            >
+              {n.label}
+            </text>
+          )}
+        </g>
+      ))}
+    </svg>
+  );
+};
+
+/* ============================================================
+   Hero visual — composite app window
+   ============================================================ */
+const HeroVisual = () => (
+  <div className="hero__visual">
+    <div className="app-window">
+      <div className="app-window__bar">
+        <div className="app-window__dots">
+          <span className="app-window__dot app-window__dot--red"></span>
+          <span className="app-window__dot app-window__dot--yellow"></span>
+          <span className="app-window__dot app-window__dot--green"></span>
+        </div>
+        <div className="app-window__title">Nerve — ~/Notes/Q3 Planning.md</div>
+      </div>
+      <div className="hero-composite">
+        {/* Icon sidebar */}
+        <div className="hero-composite__sidebar">
+          <div className="hero-composite__sidebar-icon hero-composite__sidebar-icon--active"><Icons.Note /></div>
+          <div className="hero-composite__sidebar-icon"><Icons.Graph /></div>
+          <div className="hero-composite__sidebar-icon"><Icons.Kanban /></div>
+          <div className="hero-composite__sidebar-icon"><Icons.Calendar /></div>
+          <div style={{ flex: 1 }}></div>
+          <div className="hero-composite__sidebar-icon"><Icons.Settings /></div>
+        </div>
+        {/* Note list */}
+        <div className="hero-composite__notelist">
+          <div className="notelist__header">Notes · 24</div>
+          <div className="notelist__item notelist__item--active">
+            <span className="notelist__item-dot"></span>Q3 Planning
+          </div>
+          <div className="notelist__item">
+            <span className="notelist__item-dot"></span>Sync architecture
+          </div>
+          <div className="notelist__item">
+            <span className="notelist__item-dot"></span>Graph view
+          </div>
+          <div className="notelist__item">
+            <span className="notelist__item-dot"></span>Weekly review · Aug 12
+          </div>
+          <div className="notelist__item">
+            <span className="notelist__item-dot"></span>Maya Chen
+          </div>
+          <div className="notelist__item">
+            <span className="notelist__item-dot"></span>Rendering pipeline
+          </div>
+          <div className="notelist__item">
+            <span className="notelist__item-dot"></span>Hiring — sync eng
+          </div>
+        </div>
+        {/* Editor + Graph */}
+        <div className="hero-composite__main">
+          <div className="hero-composite__editor">
+            <EditorContent />
+          </div>
+          <div className="hero-composite__graph">
+            <GraphMock />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+/* ============================================================
+   Hero
+   ============================================================ */
+const Hero = () => {
+  const [ref, visible] = useReveal();
+  return (
+    <section className="hero" id="top">
+      <div className="hero__bg" aria-hidden="true"></div>
+      <div className="container hero__inner">
+        <div ref={ref} className={`reveal${visible ? ' is-visible' : ''}`}>
+          <div className="hero__pill">
+            <span className="hero__pill-dot"></span>
+            <span>Local-first · Beta</span>
+            <span className="hero__pill-version">v0.4.2</span>
+          </div>
+          <h1 className="hero__headline">
+            Notes, tasks, and a graph that's <em>actually yours</em>.
+          </h1>
+          <p className="hero__sub">
+            Nerve is a local-first workspace that pairs a distraction-free editor with bi-directional linking, a recurring-task kanban, and a calendar. No account. No sync spinners. No lock-in.
+          </p>
+          <div className="hero__ctas">
+            <a className="btn btn--primary btn--lg" href="#download">
+              <Icons.Download />
+              <span>Download — free</span>
+            </a>
+            <a className="btn btn--secondary btn--lg" href="#how-it-works">
+              <span>See how it works</span>
+              <Icons.ArrowDown />
+            </a>
+          </div>
+          <div className="hero__platforms">
+            <Icons.Apple />
+            <span>macOS</span>
+            <span aria-hidden="true">·</span>
+            <Icons.Windows />
+            <span>Windows</span>
+            <span aria-hidden="true">·</span>
+            <Icons.Linux />
+            <span>Linux</span>
+          </div>
+        </div>
+        <HeroVisual />
+      </div>
+    </section>
+  );
+};
+
+/* ============================================================
+   Problem framing
+   ============================================================ */
+const ProblemFraming = () => {
+  const [ref, visible] = useReveal();
+  return (
+    <section className="problem">
+      <div className="container">
+        <div ref={ref} className={`reveal problem__inner${visible ? ' is-visible' : ''}`}>
+          <p className="problem__text">
+            <strong>Notion</strong> for documents. <strong>Obsidian</strong> for links. <strong>Linear</strong> for tasks. <strong>Google Calendar</strong> for events. <span className="strike">Four tools, four sync failures, one disconnected brain.</span>
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ============================================================
+   Feature: Editor mock (zoomed)
+   ============================================================ */
+const EditorMock = () => (
+  <div className="app-window">
+    <div className="app-window__bar">
+      <div className="app-window__dots">
+        <span className="app-window__dot app-window__dot--red"></span>
+        <span className="app-window__dot app-window__dot--yellow"></span>
+        <span className="app-window__dot app-window__dot--green"></span>
+      </div>
+      <div className="app-window__title">Q3 Planning.md</div>
+    </div>
+    <div style={{ padding: '28px 32px', background: 'var(--bg-elevated)' }}>
+      <EditorContent />
+    </div>
+  </div>
+);
+
+/* ============================================================
+   Feature: Backlinks mock
+   ============================================================ */
+const BacklinksMock = () => (
+  <div className="backlinks-mock">
+    <div className="backlinks-mock__editor">
+      <div className="editor-mock__title" style={{ fontSize: '1.125rem', marginBottom: '12px' }}>Graph view</div>
+      <p className="editor-mock__p" style={{ marginBottom: '10px' }}>
+        Every note and task in Nerve is a node. Every <span className="wikilink">wikilink</span> is an edge.
+      </p>
+      <p className="editor-mock__p" style={{ marginBottom: '10px' }}>
+        References are tracked in both directions automatically. The <span className="wikilink">Q3 Planning</span> note links here, and this page links back to it.
+      </p>
+      <p className="editor-mock__p">
+        Type <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8em', padding: '1px 5px', background: 'var(--bg-inset)', borderRadius: '4px', color: 'var(--text-secondary)' }}>[[</span> anywhere to start referencing.
+      </p>
+    </div>
+    <div className="backlinks-mock__panel">
+      <div className="backlinks-mock__panel-title">
+        <Icons.Link />
+        <span>Linked references</span>
+        <span className="backlinks-mock__panel-count">3</span>
+      </div>
+      <div className="backlink-item">
+        <div className="backlink-item__title">Q3 Planning</div>
+        <div className="backlink-item__ctx">
+          The <em>graph view</em> needs to handle 10k nodes without…
+        </div>
+      </div>
+      <div className="backlink-item">
+        <div className="backlink-item__title">Sync architecture</div>
+        <div className="backlink-item__ctx">
+          When the <em>graph view</em> updates, we re-broadcast the diff…
+        </div>
+      </div>
+      <div className="backlink-item">
+        <div className="backlink-item__title">Weekly review · Aug 12</div>
+        <div className="backlink-item__ctx">
+          Opened the <em>graph view</em> and noticed a cluster around…
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+/* ============================================================
+   Feature: Kanban mock
+   ============================================================ */
+const KanbanMock = () => {
+  const columns = [
+    {
+      key: 'todo', label: 'To Do', count: 3, dot: 'todo',
+      cards: [
+        { title: 'Ship v0.5', tags: [{ label: 'eng', color: 'blue' }] },
+        { title: 'Review sync protocol options', tags: [], recurring: 'weekly' },
+        { title: 'Update onboarding docs', tags: [{ label: 'docs', color: '' }] },
+      ],
+    },
+    {
+      key: 'doing', label: 'Doing', count: 2, dot: 'doing',
+      cards: [
+        { title: 'Graph perf optimization', tags: [{ label: 'eng', color: 'blue' }, { label: 'p0', color: 'amber' }] },
+        { title: 'Mobile beta setup', tags: [{ label: 'eng', color: 'blue' }] },
+      ],
+    },
+    {
+      key: 'done', label: 'Done', count: 3, dot: 'done',
+      cards: [
+        { title: 'Kanban recurrence', tags: [], done: true, recurring: 'weekly' },
+        { title: 'Theme toggle', tags: [{ label: 'ui', color: 'green' }], done: true },
+        { title: 'Calendar import', tags: [], done: true },
+      ],
+    },
+    {
+      key: 'skipped', label: 'Skipped', count: 1, dot: 'skipped',
+      cards: [
+        { title: 'Custom CSS themes', tags: [{ label: 'deferred', color: '' }], skipped: true },
+      ],
+    },
+  ];
+
+  return (
+    <div className="kanban-mock">
+      <div className="kanban-mock__header">
+        <div className="kanban-mock__title">Board · Engineering</div>
+        <div className="kanban-mock__filter">filter: all</div>
+      </div>
+      <div className="kanban-mock__cols">
+        {columns.map(col => (
+          <div className="kanban-col" key={col.key}>
+            <div className="kanban-col__header">
+              <span className={`kanban-col__dot kanban-col__dot--${col.dot}`}></span>
+              <span>{col.label}</span>
+              <span className="kanban-col__count">{col.count}</span>
+            </div>
+            {col.cards.map((card, i) => (
+              <div
+                className={`kanban-card${card.done ? ' kanban-card--done' : ''}${card.skipped ? ' kanban-card--skipped' : ''}`}
+                key={i}
+              >
+                <div className="kanban-card__title">{card.title}</div>
+                <div className="kanban-card__meta">
+                  {card.recurring && (
+                    <span className="kanban-recurring">
+                      <Icons.Recurring />
+                      <span>{card.recurring}</span>
+                    </span>
+                  )}
+                  {card.tags.map((tag, j) => (
+                    <span className={`kanban-tag${tag.color ? ` kanban-tag--${tag.color}` : ''}`} key={j}>
+                      {tag.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   Feature: Calendar mock
+   ============================================================ */
+const CalendarMock = () => {
+  const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  // August 2025 — starts on Friday (day 5)
+  const monthStart = 5;
+  const daysInMonth = 31;
+  const daysInPrev = 31; // July
+  const today = 14;
+
+  const events = {
+    4: [{ label: '1:1 Maya', color: 'accent' }],
+    6: [{ label: 'Sprint plan', color: 'blue' }],
+    12: [{ label: 'Weekly review', color: 'green' }, { label: 'v0.5 sync', color: 'accent' }],
+    14: [{ label: 'v0.5 release', color: 'rose' }, { label: 'Launch post', color: 'amber' }],
+    18: [{ label: 'Design rev', color: 'blue' }],
+    22: [{ label: 'Weekly review', color: 'green' }],
+    26: [{ label: 'Hiring loop', color: 'amber' }],
+    28: [{ label: 'Beta sync', color: 'accent' }],
+  };
+
+  const cells = [];
+  // Prev month tail
+  for (let i = monthStart - 1; i >= 0; i--) {
+    cells.push({ day: daysInPrev - i, out: true });
+  }
+  // Current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, out: false, today: d === today, events: events[d] || [] });
+  }
+  // Next month head — fill to 42
+  let nextDay = 1;
+  while (cells.length < 42) {
+    cells.push({ day: nextDay++, out: true });
+  }
+
+  return (
+    <div className="calendar-mock">
+      <div className="calendar-mock__header">
+        <div className="calendar-mock__month">August 2025</div>
+        <div className="calendar-mock__nav">
+          <div className="calendar-mock__nav-btn">‹</div>
+          <div className="calendar-mock__nav-btn">›</div>
+        </div>
+      </div>
+      <div className="calendar-mock__weekdays">
+        {weekdays.map((d, i) => <div className="calendar-mock__weekday" key={i}>{d}</div>)}
+      </div>
+      <div className="calendar-mock__grid">
+        {cells.map((cell, i) => (
+          <div
+            className={`calendar-day${cell.out ? ' calendar-day--out' : ''}${cell.today ? ' calendar-day--today' : ''}`}
+            key={i}
+          >
+            <div className="calendar-day__num">{cell.day}</div>
+            {cell.events && cell.events.map((ev, j) => (
+              <div className={`calendar-event calendar-event--${ev.color}`} key={j}>{ev.label}</div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   Feature block wrapper
+   ============================================================ */
+const FeatureBlock = ({ tag, title, body, bullets, media, reverse }) => {
+  const [ref, visible] = useReveal();
+  return (
+    <div ref={ref} className={`reveal feature${reverse ? ' feature--reverse' : ''}${visible ? ' is-visible' : ''}`}>
+      <div className="feature__body-col">
+        <div className="feature__tag">{tag}</div>
+        <h3 className="feature__title">{title}</h3>
+        <p className="feature__body">{body}</p>
+        {bullets && bullets.length > 0 && (
+          <ul className="feature__bullets">
+            {bullets.map((b, i) => (
+              <li className="feature__bullet" key={i}>
+                <Icons.Check />
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="feature__media">{media}</div>
+    </div>
+  );
+};
+
+/* ============================================================
+   Feature showcase
+   ============================================================ */
+const FeatureShowcase = () => {
+  const [headerRef, headerVisible] = useReveal();
+  return (
+    <section className="features" id="features">
+      <div className="container">
+        <div ref={headerRef} className={`reveal features__header${headerVisible ? ' is-visible' : ''}`}>
+          <div className="section-eyebrow">Everything in one place</div>
+          <h2 className="section-title">Five surfaces, one workspace, zero sync conflicts.</h2>
+          <p className="section-lead">
+            Each tool below ships in the same file format, against the same graph, on the same device. The editor isn't a separate app from the board; they're two views of the same underlying notes.
+          </p>
+        </div>
+
+        <FeatureBlock
+          tag="Editor"
+          title="A writing surface that gets out of the way"
+          body="Bold, italic, headings, font sizes, font colors — just enough formatting, none of the toolbar clutter. Slash commands for everything else, markdown shortcuts for the rest."
+          bullets={[
+            'Markdown shortcuts: **, *, #, -, >',
+            'Slash menu for blocks, embeds, and tasks',
+            'No autosave spinner — writes go to disk every keystroke',
+          ]}
+          media={<EditorMock />}
+        />
+
+        <FeatureBlock
+          tag="Linking"
+          title="Notes that know about each other"
+          body="Type [[ to reference any note or task. Every backlink is tracked automatically — no maintenance tax, no orphan pages, no separate 'tags' system to keep in sync."
+          bullets={[
+            'Bi-directional references, updated in real time',
+            'Backlinks panel surfaces every incoming reference',
+            'Rename a note and every link follows',
+          ]}
+          media={<BacklinksMock />}
+          reverse
+        />
+
+        <FeatureBlock
+          tag="Graph"
+          title="See how your thinking connects"
+          body="Every link becomes an edge. Watch clusters form around projects, people, and ideas you keep coming back to. Drag nodes to pin them, click to filter, hover to preview."
+          bullets={[
+            'Handles 10k+ nodes without dropping frames',
+            'Filter by tag, by backlink depth, by recency',
+            'Live updates as you write — no rebuild step',
+          ]}
+          media={
+            <div className="app-window">
+              <div className="app-window__bar">
+                <div className="app-window__dots">
+                  <span className="app-window__dot app-window__dot--red"></span>
+                  <span className="app-window__dot app-window__dot--yellow"></span>
+                  <span className="app-window__dot app-window__dot--green"></span>
+                </div>
+                <div className="app-window__title">Graph view · 2,341 nodes · 5,892 edges</div>
+              </div>
+              <div style={{ height: '360px', background: 'var(--bg-subtle)' }}>
+                <GraphMock />
+              </div>
+            </div>
+          }
+        />
+
+        <FeatureBlock
+          tag="Tasks"
+          title="A board that handles recurrence"
+          body="To Do, Doing, Done, Skipped. Drag tasks across columns. Set a recurrence — daily, weekly, monthly — and watch completed cards respawn on schedule, with full history."
+          bullets={[
+            'Recurring tasks: daily / weekly / monthly / custom',
+            'Skipped is a first-class state, not a hack',
+            'Every card is a note — full editor, full links',
+          ]}
+          media={<KanbanMock />}
+          reverse
+        />
+
+        <FeatureBlock
+          tag="Calendar"
+          title="Events alongside your notes"
+          body="Google Calendar–style event creation and viewing, tied back to the notes and tasks they relate to. No tab-switching to figure out what a meeting was about."
+          bullets={[
+            'Attach a note to any event — opens in one click',
+            'Recurring events with the same engine as recurring tasks',
+            `Local ICS import — your calendar doesn't need the cloud`,
+          ]}
+          media={<CalendarMock />}
+        />
+      </div>
+    </section>
+  );
+};
+
+/* ============================================================
+   Trust / Local-first section
+   ============================================================ */
+const TrustSection = () => {
+  const [ref, visible] = useReveal();
+  const points = [
+    {
+      icon: <Icons.HardDrive />,
+      title: 'Plain markdown on disk',
+      body: 'Every note is a .md file in a folder you choose. Open it in vim, grep it, back it up to a thumb drive. The app is just a viewer.',
+    },
+    {
+      icon: <Icons.WifiOff />,
+      title: 'Works offline, always',
+      body: `No spinners when the wifi drops. No "reconnecting…" banner. The app doesn't know whether you're online, and it doesn't care.`,
+    },
+    {
+      icon: <Icons.UserX />,
+      title: 'No account required',
+      body: `Download, open, write. No email confirmation, no workspace setup, no "verify your domain." Your data isn't tied to a login.`,
+    },
+    {
+      icon: <Icons.Lock />,
+      title: 'Optional E2E sync',
+      body: 'If you want sync across desktop and mobile, flip it on. End-to-end encrypted, CRDT-based, and works through any S3-compatible bucket.',
+    },
+  ];
+
+  return (
+    <section className="trust" id="local-first">
+      <div className="container">
+        <div ref={ref} className={`reveal${visible ? ' is-visible' : ''}`}>
+          <div className="section-eyebrow">Local-first</div>
+          <h2 className="section-title">Local-first isn't a feature. It's the architecture.</h2>
+          <p className="section-lead">
+            Most apps treat your device as a thin client. Nerve treats it as the source of truth. The cloud is optional, the file format is open, and the app keeps working the day our servers disappear.
+          </p>
+        </div>
+
+        <div className="trust__grid">
+          <div className="trust__points">
+            {points.map((p, i) => (
+              <div key={i}>
+                <div className="trust-point__icon">{p.icon}</div>
+                <div className="trust-point__title">{p.title}</div>
+                <div className="trust-point__body">{p.body}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="trust__visual">
+            <div className="trust__visual-bar">
+              <div className="app-window__dots">
+                <span className="app-window__dot app-window__dot--red"></span>
+                <span className="app-window__dot app-window__dot--yellow"></span>
+                <span className="app-window__dot app-window__dot--green"></span>
+              </div>
+              <div className="trust__visual-path">
+                <span className="tilde">~</span>/Nerve
+              </div>
+            </div>
+            <div className="trust__visual-body">
+              <div className="trust-file"><span className="trust-file__name">Notes/</span></div>
+              <div className="trust-file trust-file__indent">Q3 Planning.md</div>
+              <div className="trust-file trust-file__indent">Sync architecture.md</div>
+              <div className="trust-file trust-file__indent">Graph view.md</div>
+              <div className="trust-file trust-file__indent">Maya Chen.md</div>
+              <div className="trust-file"><span className="trust-file__name">Tasks/</span></div>
+              <div className="trust-file trust-file__indent">recurring.json <span className="trust-file__comment"># your weekly review, etc.</span></div>
+              <div className="trust-file"><span className="trust-file__name">Calendar/</span></div>
+              <div className="trust-file trust-file__indent">2025-08.ics</div>
+              <div className="trust-file"><span className="trust-file__name">.nerve/</span></div>
+              <div className="trust-file trust-file__indent">graph.cache <span className="trust-file__comment"># derived, deletable</span></div>
+              <div className="trust-file trust-file__indent"><span className="trust-file__accent">sync.enc</span> <span className="trust-file__comment"># only if you opt in</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ============================================================
+   How it works
+   ============================================================ */
+const HowItWorks = () => {
+  const [ref, visible] = useReveal();
+  const steps = [
+    {
+      num: '01 / Capture',
+      icon: <Icons.Capture />,
+      title: 'Capture',
+      body: 'Drop a thought, a task, a meeting note. The editor stays out of the way — no formatting required unless you ask for it.',
+    },
+    {
+      num: '02 / Link',
+      icon: <Icons.Link />,
+      title: 'Link',
+      body: 'Type [[ to reference any note or task. Backlinks form automatically. The graph starts drawing itself while you write.',
+    },
+    {
+      num: '03 / Organize',
+      icon: <Icons.Kanban />,
+      title: 'Organize',
+      body: 'Drag tasks onto the board. Pin events to the calendar. The graph updates live. No sync button, no refresh, no migration.',
+    },
+    {
+      num: '04 / Review',
+      icon: <Icons.Graph />,
+      title: 'Review',
+      body: 'Open the graph. See what you\'ve been thinking about — and what\'s gone quiet. Click a cluster to dive back in.',
+    },
+  ];
+
+  return (
+    <section className="howitworks" id="how-it-works">
+      <div className="container">
+        <div ref={ref} className={`reveal${visible ? ' is-visible' : ''}`}>
+          <div className="section-eyebrow">How it works</div>
+          <h2 className="section-title">Four moves. One workflow.</h2>
+          <p className="section-lead">
+            Nerve isn't five apps glued together. It's one workflow where every surface feeds the next — capture becomes a link, becomes a task, becomes a review.
+          </p>
+        </div>
+
+        <div className="howitworks__steps">
+          {steps.map((s, i) => (
+            <div className="step" key={i}>
+              <div className="step__num">{s.num}</div>
+              <div className="step__icon">{s.icon}</div>
+              <div className="step__title">{s.title}</div>
+              <div className="step__body">{s.body}</div>
+              <div className="step__arrow"><Icons.ChevronRight /></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ============================================================
+   Download section
+   ============================================================ */
+const DownloadSection = () => {
+  const [ref, visible] = useReveal();
+  const platforms = [
+    {
+      icon: <Icons.Apple />,
+      name: 'macOS',
+      meta: 'Universal · 124 MB',
+      body: 'Apple Silicon and Intel. DMG install, or brew install nerve. Minimum macOS 11.',
+      action: 'Download .dmg',
+      available: true,
+    },
+    {
+      icon: <Icons.Windows />,
+      name: 'Windows',
+      meta: 'x64 · 138 MB',
+      body: 'Windows 10 and 11. MSI installer with auto-update. ARM build available on request.',
+      action: 'Download .msi',
+      available: true,
+    },
+    {
+      icon: <Icons.Linux />,
+      name: 'Linux',
+      meta: 'AppImage · 142 MB',
+      body: 'AppImage, .deb, and .rpm. Flatpak coming in v0.5. Works on Wayland and X11.',
+      action: 'Download',
+      available: true,
+    },
+    {
+      icon: <Icons.Apple />,
+      name: 'iOS',
+      meta: 'iPhone & iPad',
+      body: 'Native iOS app, end-to-end encrypted sync with your desktop. Reads the same markdown.',
+      action: 'Coming soon',
+      available: false,
+    },
+    {
+      icon: <Icons.Android />,
+      name: 'Android',
+      meta: 'Android 10+',
+      body: 'Native Android, same CRDT sync. APK and Play Store. Reads the same markdown.',
+      action: 'Coming soon',
+      available: false,
+    },
+    {
+      icon: <Icons.GitHub />,
+      name: 'Build from source',
+      meta: 'MIT licensed',
+      body: 'The desktop client is open source. Clone, build, audit, fork. The sync server is a separate binary.',
+      action: 'View on GitHub',
+      available: true,
+      github: true,
+    },
+  ];
+
+  return (
+    <section className="download" id="download">
+      <div className="container">
+        <div ref={ref} className={`reveal download__header${visible ? ' is-visible' : ''}`}>
+          <div className="section-eyebrow" style={{ justifyContent: 'center' }}>Download</div>
+          <h2 className="download__title">Get Nerve.</h2>
+          <p className="download__sub">
+            Free during beta. Local-first forever. No account, no telemetry, no upgrade tiers.
+          </p>
+        </div>
+
+        <div className="download__cards">
+          {platforms.map((p, i) => (
+            <div className={`dl-card${!p.available && !p.github ? ' dl-card--soon' : ''}`} key={i}>
+              <div className="dl-card__top">
+                <div className="dl-card__icon">{p.icon}</div>
+                <div>
+                  <div className="dl-card__name">{p.name}</div>
+                  <div className="dl-card__meta">{p.meta}</div>
+                </div>
+              </div>
+              <div className="dl-card__body">{p.body}</div>
+              {p.available ? (
+                <a
+                  className="dl-card__action"
+                  href={p.github ? 'https://github.com' : '#'}
+                  target={p.github ? '_blank' : undefined}
+                  rel={p.github ? 'noopener noreferrer' : undefined}
+                >
+                  <span>{p.action}</span>
+                  <Icons.ArrowRight />
+                </a>
+              ) : (
+                <div className="dl-card__action dl-card__action--soon">
+                  <span>{p.action}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <p className="download__footnote">
+          Desktop beta is stable enough for daily use. Mobile is in private TestFlight — <a href="#top">join the waitlist</a>.
+        </p>
+      </div>
+    </section>
+  );
+};
+
+/* ============================================================
+   Footer
+   ============================================================ */
+const Footer = () => (
+  <footer className="footer">
+    <div className="container">
+      <div className="footer__top">
+        <div className="footer__brand">
+          <div className="footer__logo">
+            <span className="footer__logo-mark"><LogoMark size={24} /></span>
+            <span>Nerve</span>
+          </div>
+          <p className="footer__tag">
+            A local-first workspace for notes, tasks, and a graph that's actually yours.
+          </p>
+        </div>
+        <div className="footer__links">
+          <div>
+            <div className="footer__col-title">Product</div>
+            <a className="footer__link" href="#features">Features</a>
+            <a className="footer__link" href="#local-first">Local-first</a>
+            <a className="footer__link" href="#how-it-works">How it works</a>
+            <a className="footer__link" href="#download">Download</a>
+          </div>
+          <div>
+            <div className="footer__col-title">Resources</div>
+            <a className="footer__link" href="#">Docs</a>
+            <a className="footer__link" href="#">Changelog</a>
+            <a className="footer__link" href="#">Roadmap</a>
+            <a className="footer__link" href="#">Community</a>
+          </div>
+          <div>
+            <div className="footer__col-title">Open source</div>
+            <a className="footer__link" href="#">GitHub</a>
+            <a className="footer__link" href="#">File format spec</a>
+            <a className="footer__link" href="#">Sync protocol</a>
+            <a className="footer__link" href="#">Contribute</a>
+          </div>
+          <div>
+            <div className="footer__col-title">Legal</div>
+            <a className="footer__link" href="#">Privacy</a>
+            <a className="footer__link" href="#">License (MIT)</a>
+            <a className="footer__link" href="#">Security</a>
+            <a className="footer__link" href="#">Contact</a>
+          </div>
+        </div>
+      </div>
+      <div className="footer__bottom">
+        <div>© 2025 Nerve. Built for people who keep notes.</div>
+        <div className="footer__bottom-links">
+          <a className="footer__bottom-link" href="#">Status</a>
+          <a className="footer__bottom-link" href="#">RSS</a>
+          <a className="footer__bottom-link" href="https://github.com">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+);
+
+/* ============================================================
+   App
+   ============================================================ */
+const App = () => {
+  // Initialize theme on mount (useTheme runs inside ThemeToggle, but
+  // we also want to set the document attribute as early as possible).
+  useEffect(() => {
+    // The ThemeToggle's useTheme handles this, but as a safety net:
+    try {
+      const saved = localStorage.getItem('nerve-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    } catch (e) {}
+  }, []);
+
+  return (
+    <React.Fragment>
+      <Nav />
+      <main>
+        <Hero />
+        <ProblemFraming />
+        <FeatureShowcase />
+        <TrustSection />
+        <HowItWorks />
+        <DownloadSection />
+      </main>
+      <Footer />
+    </React.Fragment>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
